@@ -66,6 +66,43 @@ ssh -i key/yc ubuntu@$LE_IP 'sudo ~/.acme.sh/acme.sh --renew -d <ip> --cert-prof
 Сертификат импортирован в Yandex Certificate Manager через Terraform.
 Файлы сертификата хранятся локально в `certs/`.
 
+## Ansible
+
+Управление конфигурацией и деплой приложения на ВМ через Ansible.
+
+### Предварительная установка коллекций
+
+```bash
+make ansible-install
+```
+
+### Проверка доступности ВМ
+
+```bash
+make ansible-ping
+```
+
+### Деплой
+
+```bash
+make ansible-playbook   # полный прогон
+make ansible-check      # dry-run (проверить, что изменится)
+```
+
+Запуск только определённой группы задач:
+
+```bash
+ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags docker
+ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags nginx
+ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags acme
+```
+
+### Что делает плейбук
+
+- Устанавливает Docker и Docker SDK для Python (`community.docker`)
+- Создаёт директорию `/var/www/acme-challenge` для Let's Encrypt challenge
+- Запускает nginx-контейнер с пробросом порта 80 и монтированием ACME-директории
+
 ## Команды
 
 | Команда | Описание |
@@ -75,3 +112,7 @@ ssh -i key/yc ubuntu@$LE_IP 'sudo ~/.acme.sh/acme.sh --renew -d <ip> --cert-prof
 | `make tf-apply` | Применить изменения |
 | `make tf-destroy` | Уничтожить инфраструктуру |
 | `make tf-output` | Показать outputs (IP-адреса) |
+| `make ansible-install` | Установить Ansible-коллекции |
+| `make ansible-ping` | Проверить доступность ВМ |
+| `make ansible-playbook` | Запустить плейбук (деплой) |
+| `make ansible-check` | Dry-run плейбука |

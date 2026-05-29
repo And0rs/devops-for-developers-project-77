@@ -1,0 +1,7 @@
+---
+ansible_python_interpreter: /usr/bin/python3
+app_port: 80
+acme_host_dir: /var/www/acme-challenge
+acme_container_dir: /usr/share/nginx/html/.well-known/acme-challenge
+container_name: nginx
+container_image: nginx:alpine

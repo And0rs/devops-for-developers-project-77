@@ -1,0 +1,60 @@
+---
+- name: Deploy application on VMs
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Ensure Docker is installed
+      ansible.builtin.apt:
+        name: docker.io
+        state: present
+        update_cache: yes
+      tags: docker
+
+    - name: Ensure Docker service is running and enabled
+      ansible.builtin.systemd:
+        name: docker
+        state: started
+        enabled: yes
+      tags: docker
+
+    - name: Install Docker SDK for Python
+      ansible.builtin.apt:
+        name: python3-docker
+        state: present
+      tags: docker
+
+    - name: Create ACME challenge directory on host
+      ansible.builtin.file:
+        path: "{{ acme_host_dir }}"
+        state: directory
+        mode: '0755'
+      tags: acme
+
+    - name: Get existing container info
+      community.docker.docker_container_info:
+        name: "{{ container_name }}"
+      register: container_info
+      tags: nginx
+
+    - name: Remove unmanaged container
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        state: absent
+      when: container_info.exists and container_info.container.Config.Labels.get('managed_by', '') != 'ansible'
+      tags: nginx
+
+    - name: Ensure nginx container is running
+      community.docker.docker_container:
+        name: "{{ container_name }}"
+        image: "{{ container_image }}"
+        state: started
+        restart_policy: always
+        ports:
+          - "{{ app_port }}:80"
+        volumes:
+          - "{{ acme_host_dir }}:{{ acme_container_dir }}:ro"
+        labels:
+          managed_by: "ansible"
+        pull: no
+      tags: nginx
