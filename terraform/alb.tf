@@ -79,4 +79,25 @@ resource "yandex_alb_load_balancer" "alb" {
       }
     }
   }
+
+  listener {
+    name = "https-listener"
+
+    endpoint {
+      address {
+        external_ipv4_address {}
+      }
+      ports = [443]
+    }
+
+    tls {
+      default_handler {
+        http_handler {
+          http_router_id = yandex_alb_http_router.router.id
+        }
+        certificate_ids = [yandex_cm_certificate.le_cert.id]
+      }
+    }
+  }
+
 }

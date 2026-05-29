@@ -8,7 +8,8 @@
 Проект разворачивает инфраструктуру в Yandex Cloud:
 
 - 2 виртуальные машины (Ubuntu 24.04) с nginx в Docker
-- Application Load Balancer с HTTP-листенером
+- Application Load Balancer с HTTP (80) и HTTPS (443) листенерами
+- TLS-сертификат Let's Encrypt (самоподписанный для IP-адреса, действителен 6 дней)
 - Удалённое хранение Terraform state в Object Storage
 
 ## Переменные окружения
@@ -38,10 +39,12 @@ make tf-plan
 make tf-apply
 ```
 
-Проверка:
+Проверка HTTP и HTTPS:
 
 ```bash
+make tf-output
 curl http://$(make tf-output | grep lb-url | cut -d' ' -f2)
+curl -k https://$(make tf-output | grep lb-url-https | cut -d' ' -f2)
 ```
 
 Удаление:
@@ -49,6 +52,19 @@ curl http://$(make tf-output | grep lb-url | cut -d' ' -f2)
 ```bash
 make tf-destroy
 ```
+
+## Let's Encrypt
+
+Сертификат получен через `acme.sh` с профилем `shortlived` (6 дней).
+Для обновления выполнить на VM-1:
+
+```bash
+export LE_IP=<vm-1-public-ip>
+ssh -i key/yc ubuntu@$LE_IP 'sudo ~/.acme.sh/acme.sh --renew -d <ip> --cert-profile shortlived --force'
+```
+
+Сертификат импортирован в Yandex Certificate Manager через Terraform.
+Файлы сертификата хранятся локально в `certs/`.
 
 ## Команды
 
