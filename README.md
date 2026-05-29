@@ -11,16 +11,23 @@
 - Application Load Balancer с HTTP-листенером
 - Удалённое хранение Terraform state в Object Storage
 
-## Быстрый старт
+## Переменные окружения
 
-Перед началом установите переменные окружения:
+Все чувствительные данные вынесены в `.env` (файл в `.gitignore`):
 
 ```bash
+# .env
 export TF_VAR_yc_token="<Yandex Cloud OAuth token>"
 export TF_VAR_cloud_id="<Cloud ID>"
 export TF_VAR_folder_id="<Folder ID>"
 export AWS_ACCESS_KEY_ID="<S3 static key ID>"
 export AWS_SECRET_ACCESS_KEY="<S3 static secret key>"
+```
+
+Перед началом работы:
+
+```bash
+source .env
 ```
 
 Инициализация и развёртывание:
