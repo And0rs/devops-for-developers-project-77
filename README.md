@@ -108,3 +108,19 @@ ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags acme
 | `make ansible-ping` | Проверить доступность ВМ |
 | `make ansible-playbook` | Запустить плейбук (деплой) |
 | `make ansible-check` | Dry-run плейбука |
+
+## Мониторинг
+
+### Datadog
+- На обеих ВМ установлен Datadog Agent (роль `DataDog.datadog`), отправляет метрики в `datadoghq.eu`
+- Terraform создаёт `datadog_monitor.app_health` — алерт на HTTP-доступность nginx
+
+### Upmon
+- Сервис [Upmon](https://www.upmon.com/) отслеживает доступность серверов через heartbeat
+- На каждой ВМ настроен cron (`*/5 * * * *`), который `curl`-ит `https://upmon.net/43131059-2d66-4d83-86aa-52a6f3f10005`
+- Если сервер не присылает сигнал в течение заданного интервала — Upmon отправляет уведомление
+
+Запуск только heartbeat-задачи:
+```bash
+ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags upmon
+```

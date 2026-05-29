@@ -69,3 +69,10 @@
           managed_by: "ansible"
         pull: no
       tags: nginx
+
+    - name: Upmon heartbeat cron
+      ansible.builtin.cron:
+        name: upmon-heartbeat
+        minute: "*/5"
+        job: "curl -fsS -m 10 --retry 3 -o /dev/null {{ upmon_url }}"
+      tags: upmon

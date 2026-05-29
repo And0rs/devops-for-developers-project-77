@@ -6,6 +6,8 @@ acme_container_dir: /usr/share/nginx/html/.well-known/acme-challenge
 container_name: nginx
 container_image: nginx:alpine
 
+upmon_url: https://upmon.net/43131059-2d66-4d83-86aa-52a6f3f10005
+
 datadog_api_key: "{{ vault_datadog_api_key }}"
 datadog_site: "datadoghq.eu"
 datadog_config:
