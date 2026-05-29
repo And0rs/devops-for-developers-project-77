@@ -9,7 +9,8 @@
 
 - 2 виртуальные машины (Ubuntu 24.04) с nginx в Docker
 - Application Load Balancer с HTTP (80) и HTTPS (443) листенерами
-- TLS-сертификат Let's Encrypt (самоподписанный для IP-адреса, действителен 6 дней)
+- Домен: [https://percacaosu.online](https://percacaosu.online)
+- TLS-сертификат Let's Encrypt для домена
 - Удалённое хранение Terraform state в Object Storage
 
 ## Переменные окружения
@@ -43,8 +44,7 @@ make tf-apply
 
 ```bash
 make tf-output
-curl http://$(make tf-output | grep lb-url | cut -d' ' -f2)
-curl -k https://$(make tf-output | grep lb-url-https | cut -d' ' -f2)
+curl -I https://percacaosu.online
 ```
 
 Удаление:
@@ -55,16 +55,8 @@ make tf-destroy
 
 ## Let's Encrypt
 
-Сертификат получен через `acme.sh` с профилем `shortlived` (6 дней).
-Для обновления выполнить на VM-1:
-
-```bash
-export LE_IP=<vm-1-public-ip>
-ssh -i key/yc ubuntu@$LE_IP 'sudo ~/.acme.sh/acme.sh --renew -d <ip> --cert-profile shortlived --force'
-```
-
-Сертификат импортирован в Yandex Certificate Manager через Terraform.
-Файлы сертификата хранятся локально в `certs/`.
+Сертификат получен через `acme.sh` на VM-1 через HTTP-01 challenge.
+Приложение доступно по домену: [https://percacaosu.online](https://percacaosu.online)
 
 ## Ansible
 

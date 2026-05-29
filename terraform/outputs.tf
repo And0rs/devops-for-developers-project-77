@@ -17,3 +17,7 @@ output "lb-url" {
 output "lb-url-https" {
   value = "https://${yandex_alb_load_balancer.alb.listener[0].endpoint[0].address[0].external_ipv4_address[0].address}"
 }
+
+output "domain-url" {
+  value = "https://${var.domain}"
+}

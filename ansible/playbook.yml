@@ -3,6 +3,17 @@
   hosts: all
   become: yes
 
+  pre_tasks:
+    - name: Include vault variables
+      ansible.builtin.include_vars:
+        file: vars/vault.yml
+      tags: always
+
+    - name: Import Datadog Agent role
+      import_role:
+        name: DataDog.datadog
+      tags: datadog
+
   tasks:
     - name: Ensure Docker is installed
       ansible.builtin.apt:

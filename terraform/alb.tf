@@ -38,6 +38,7 @@ resource "yandex_alb_http_router" "router" {
 resource "yandex_alb_virtual_host" "vh" {
   name           = "devops-vh"
   http_router_id = yandex_alb_http_router.router.id
+  authority      = [var.domain]
 
   route {
     name = "nginx-route"

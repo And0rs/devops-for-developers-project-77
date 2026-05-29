@@ -5,3 +5,9 @@ acme_host_dir: /var/www/acme-challenge
 acme_container_dir: /usr/share/nginx/html/.well-known/acme-challenge
 container_name: nginx
 container_image: nginx:alpine
+
+datadog_api_key: "{{ vault_datadog_api_key }}"
+datadog_site: "datadoghq.eu"
+datadog_config:
+  logs_enabled: true
+  apm_non_local_traffic: false

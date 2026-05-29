@@ -31,10 +31,10 @@ ansible-ping:
 	ansible -i $(ANSIBLE_DIR)/inventory.ini -m ping all
 
 ansible-playbook:
-	ansible-playbook -i $(ANSIBLE_DIR)/inventory.ini $(ANSIBLE_DIR)/playbook.yml
+	ANSIBLE_CONFIG=$(ANSIBLE_DIR)/ansible.cfg ansible-playbook -i $(ANSIBLE_DIR)/inventory.ini $(ANSIBLE_DIR)/playbook.yml
 
 ansible-check:
-	ansible-playbook -i $(ANSIBLE_DIR)/inventory.ini $(ANSIBLE_DIR)/playbook.yml --check --diff
+	ANSIBLE_CONFIG=$(ANSIBLE_DIR)/ansible.cfg ansible-playbook -i $(ANSIBLE_DIR)/inventory.ini $(ANSIBLE_DIR)/playbook.yml --check --diff
 
 decrypt-token:
 	ansible-vault decrypt ./terraform/token.auto.tfvars
