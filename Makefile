@@ -1,22 +1,24 @@
 TERRAFORM_DIR = ./terraform
 
+TF = . ./.env && cd $(TERRAFORM_DIR) && terraform
+
 tf-init:
-	cd $(TERRAFORM_DIR) && terraform init
+	$(TF) init
 
 tf-validate:
-	cd $(TERRAFORM_DIR) && terraform validate
+	$(TF) validate
 
 tf-plan:
-	cd $(TERRAFORM_DIR) && terraform plan
+	$(TF) plan
 
 tf-apply:
-	cd $(TERRAFORM_DIR) && terraform apply
+	$(TF) apply
 
 tf-destroy:
-	cd $(TERRAFORM_DIR) && terraform destroy
+	$(TF) destroy
 
 tf-output:
-	cd $(TERRAFORM_DIR) && terraform output
+	$(TF) output
 
 # Ansible
 
