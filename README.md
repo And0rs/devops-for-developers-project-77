@@ -13,18 +13,35 @@
 - TLS-сертификат Let's Encrypt для домена
 - Удалённое хранение Terraform state в Object Storage
 
+## Требования
+
+- **Terraform** >= 1.0
+- **Ansible** >= 2.14
+- **Make**
+- **Python3** с pip
+- **curl**
+
 ## Переменные окружения
 
-Все чувствительные данные вынесены в `.env` (файл в `.gitignore`):
+Все чувствительные данные вынесены в `.env` (файл в `.gitignore`).
+Скопируйте `.env.example` в `.env` и заполните:
 
 ```bash
-# .env
-export TF_VAR_yc_token="<Yandex Cloud OAuth token>"
-export TF_VAR_cloud_id="<Cloud ID>"
-export TF_VAR_folder_id="<Folder ID>"
-export AWS_ACCESS_KEY_ID="<S3 static key ID>"
-export AWS_SECRET_ACCESS_KEY="<S3 static secret key>"
+cp .env.example .env
+# отредактируйте .env, вставив свои ключи
 ```
+
+Обязательные переменные:
+
+| Переменная | Описание |
+|---|---|
+| `TF_VAR_yc_token` | OAuth-токен Yandex Cloud |
+| `TF_VAR_cloud_id` | ID облака |
+| `TF_VAR_folder_id` | ID каталога |
+| `AWS_ACCESS_KEY_ID` | Static key ID для Object Storage |
+| `AWS_SECRET_ACCESS_KEY` | Static secret key для Object Storage |
+| `TF_VAR_datadog_api_key` | API-ключ Datadog (EU) |
+| `TF_VAR_datadog_app_key` | APP-ключ Datadog (EU) |
 
 Перед началом работы:
 
@@ -32,15 +49,18 @@ export AWS_SECRET_ACCESS_KEY="<S3 static secret key>"
 source .env
 ```
 
-Инициализация и развёртывание:
+## Полный цикл развёртывания
 
 ```bash
-make tf-init
-make tf-plan
-make tf-apply
+source .env                 # экспорт переменных
+make tf-init                # инициализация Terraform (первый раз)
+make tf-plan                # просмотр плана
+make tf-apply               # создание инфраструктуры
+make tf-to-ansible          # генерация Ansible-переменных из Terraform
+make ansible-playbook       # деплой приложения на ВМ
 ```
 
-Проверка HTTP и HTTPS:
+Проверка:
 
 ```bash
 make tf-output
@@ -58,6 +78,15 @@ make tf-destroy
 Сертификат получен через `acme.sh` на VM-1 через HTTP-01 challenge.
 Приложение доступно по домену: [https://percacaosu.online](https://percacaosu.online)
 
+### Перевыпуск сертификата
+
+```bash
+# на VM-1
+acme.sh --issue -d percacaosu.online --webroot /var/www/acme-challenge
+# после выпуска — скопировать fullchain.pem, privkey.pem, chain.pem в certs/
+# и выполнить terraform apply
+```
+
 ## Ansible
 
 Управление конфигурацией и деплой приложения на ВМ через Ansible.
@@ -67,6 +96,14 @@ make tf-destroy
 ```bash
 make ansible-install
 ```
+
+### Генерация переменных из Terraform
+
+```bash
+make tf-to-ansible
+```
+
+Создаёт `ansible/group_vars/tf_vars.yml` с IP-адресами ВМ, ALB и доменом.
 
 ### Проверка доступности ВМ
 
@@ -84,16 +121,29 @@ make ansible-check      # dry-run (проверить, что изменится
 Запуск только определённой группы задач:
 
 ```bash
-ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags docker
-ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags nginx
-ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags acme
+make ansible-playbook ANSIBLE_ARGS="--tags docker"
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags nginx
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags acme
+ANSIBLE_CONFIG=ansible/ansible.cfg ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags upmon
 ```
+
+### Просмотр и редактирование зашифрованных переменных
+
+```bash
+ansible-vault view ansible/vars/vault.yml
+ansible-vault edit ansible/vars/vault.yml
+```
+
+Пароль хранится в `vault-password` (в `.gitignore`).
 
 ### Что делает плейбук
 
-- Устанавливает Docker и Docker SDK для Python (`community.docker`)
-- Создаёт директорию `/var/www/acme-challenge` для Let's Encrypt challenge
-- Запускает nginx-контейнер с пробросом порта 80 и монтированием ACME-директории
+1. Подгружает зашифрованные переменные (vault) и переменные из Terraform (tf_vars)
+2. Устанавливает Datadog Agent на обе ВМ
+3. Устанавливает Docker и Docker SDK для Python
+4. Создаёт директорию `/var/www/acme-challenge` для Let's Encrypt challenge
+5. Запускает nginx-контейнер с пробросом порта 80
+6. Настраивает cron-задачу для heartbeat Upmon
 
 ## Команды
 
@@ -104,6 +154,7 @@ ansible-playbook -i ansible/inventory.ini ansible/playbook.yml --tags acme
 | `make tf-apply` | Применить изменения |
 | `make tf-destroy` | Уничтожить инфраструктуру |
 | `make tf-output` | Показать outputs (IP-адреса) |
+| `make tf-to-ansible` | Сгенерировать Ansible-переменные из Terraform |
 | `make ansible-install` | Установить Ansible-коллекции |
 | `make ansible-ping` | Проверить доступность ВМ |
 | `make ansible-playbook` | Запустить плейбук (деплой) |

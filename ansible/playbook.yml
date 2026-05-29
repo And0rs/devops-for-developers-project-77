@@ -9,6 +9,12 @@
         file: vars/vault.yml
       tags: always
 
+    - name: Include Terraform output variables
+      ansible.builtin.include_vars:
+        file: group_vars/tf_vars.yml
+      tags: always
+      ignore_errors: yes
+
     - name: Import Datadog Agent role
       import_role:
         name: DataDog.datadog

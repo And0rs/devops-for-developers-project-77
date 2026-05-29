@@ -9,7 +9,7 @@ override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
-.terraform.lock.hcl
 key/
 certs/
 .env
+ansible/group_vars/tf_vars.yml

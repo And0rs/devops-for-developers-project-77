@@ -20,6 +20,15 @@ tf-destroy:
 tf-output:
 	$(TF) output
 
+tf-to-ansible:
+	. ./.env && cd $(TERRAFORM_DIR) && \
+	echo "---" > ../$(ANSIBLE_DIR)/group_vars/tf_vars.yml && \
+	echo "# Auto-generated from Terraform outputs. Do not edit manually." >> ../$(ANSIBLE_DIR)/group_vars/tf_vars.yml && \
+	echo "tf_vm_1_ip: \"$$(terraform output -raw vm-1-public-ip)\"" >> ../$(ANSIBLE_DIR)/group_vars/tf_vars.yml && \
+	echo "tf_vm_2_ip: \"$$(terraform output -raw vm-2-public-ip)\"" >> ../$(ANSIBLE_DIR)/group_vars/tf_vars.yml && \
+	echo "tf_alb_ip: \"$$(terraform output -raw alb-public-ip)\"" >> ../$(ANSIBLE_DIR)/group_vars/tf_vars.yml && \
+	echo "tf_domain: \"percacaosu.online\"" >> ../$(ANSIBLE_DIR)/group_vars/tf_vars.yml
+
 # Ansible
 
 ANSIBLE_DIR = ./ansible
@@ -36,8 +45,8 @@ ansible-playbook:
 ansible-check:
 	ANSIBLE_CONFIG=$(ANSIBLE_DIR)/ansible.cfg ansible-playbook -i $(ANSIBLE_DIR)/inventory.ini $(ANSIBLE_DIR)/playbook.yml --check --diff
 
-decrypt-token:
-	ansible-vault decrypt ./terraform/token.auto.tfvars
+ansible-vault-edit:
+	ansible-vault edit $(ANSIBLE_DIR)/vars/vault.yml
 
-encrypt-token:
-	ansible-vault encrypt ./terraform/token.auto.tfvars
+ansible-vault-view:
+	ansible-vault view $(ANSIBLE_DIR)/vars/vault.yml
